@@ -1,5 +1,6 @@
 const http = require("http")
 const fs = require("fs")
+const FileReader = require("filereader")
 const express = require("express")
 const route = express.Router()
 const server = express()
@@ -31,27 +32,55 @@ server.listen(5010, () => {
 
 function handleWelcome(req, res) {
     res.writeHead(200, {
-            "Context-type":"application/text"
+            "Context-type":"application/html"
     })
 
-    res.write("Welcome to Trans server!");
+    html = "\
+        <!DOCTYPE html>\
+        <html>\
+        <body>\
+        Welcome to the Trans Service!\
+        <input type='file' id='file-selector' multiple>\
+        <script>\
+            const fileSelector = document.getElementById('file-selector');\
+            fileSelector.addEventListener('change', (event) => {\
+                const fileList = event.target.files;\
+                console.log(fileList);\
+            });\
+        </script>\
+        </body>\
+        </html>\
+    "
+
+    res.write(html);
     res.end()
 }
 
 function handleUpload(req, res) {
     res.writeHead(200, {
-            "Context-type":"json/plain"
+            "Context-type":"application/text"
     })
     
     //console.log(Object.keys(req))
+    var text=""
     const form = new formidable.IncomingForm()
     form.parse(req, (err, fields, files) => {
         const thefile = files.file
-        console.log(thefile)
+        //console.log(Object.getOwnPropertyNames(thefile));
+        text = JSON.stringify({ "received":thefile})
+        console.log(text)
+        
+        fs.readFile(thefile.filepath, (err, data) => {
+            res.write(data)
+            res.end()
+            return;
+        })
     })
     
-    res.write("posted!\n")
-    res.end()
+    //res.write("posted!\n")
+    //res.end()
+    //res.write(text)
+    //res.end()
 }
 
 function handleGetTrans(req, res) {
